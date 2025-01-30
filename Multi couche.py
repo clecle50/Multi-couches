@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 def sigmoid(x):
     return 1 / 1 - np.exp(-x)
 
+def sigmoid_deriv(x):
+    return x * (1 - x)
+
 def produitmat(A,B):
     return np.dot(A, B)
 
@@ -34,18 +37,32 @@ X_test = X_test / 255.0
 
 print(time.time() - t)
 
+#Une classe Deux couches
+class DeuxCouches():
 
-class Multi():
+    def __init__(self, input_size, hidden_size, output_size, learning_rate=0.1):
+        np.random.seed(42)
+        self.learning_rate = learning_rate
+        self.W1 = np.random.randn(hidden_size, input_size)
+        self.b1 = np.zeros((hidden_size, 1))
+        self.W2 = np.random.randn(output_size, hidden_size)
+        self.b2 = np.zeros((output_size, 1))
 
-    def __init__(self, train, chiffre, seuil, teta):
-        self.chiffre = chiffre
-        self.seuil = seuil
-        self.base = train
-        self.teta = teta
-        self.taille_image = len(self.base[0][0].flatten())
-        self.w = np.zeros(self.taille_image + 1)
-        self.input_size =
-        self.output_size =
+    def forward(self, X):
+        self.Z1 = np.dot(self.W1, X.T) + self.b1
+        self.A1 = self.sigmoid(self.Z1)
+        self.Z2 = np.dot(self.W2, self.A1) + self.b2
+        self.A2 = self.sigmoid(self.Z2)
+        return self.A2.T
+
+    def train(self, X, Y, rep=10000):
+        for rep in range(rep):
+            self.forward(X)  # Forward pass
+            self.backward(X, Y)  # Backpropagation
+
+            # Calcul de la perte (MSE)
+            loss = np.mean((Y - self.A2.T) ** 2)
+
 
 
 
