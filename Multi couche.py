@@ -40,28 +40,47 @@ print(time.time() - t)
 #Une classe Deux couches
 class DeuxCouches():
 
-    def __init__(self, input_size, hidden_size, output_size, learning_rate=0.1):
+    def __init__(self, input_size, output_size,a ,b learning_rate=0.1):
         np.random.seed(42)
         self.learning_rate = learning_rate
-        self.W1 = np.random.randn(hidden_size, input_size)
-        self.b1 = np.zeros((hidden_size, 1))
-        self.W2 = np.random.randn(output_size, hidden_size)
-        self.b2 = np.zeros((output_size, 1))
+        self.w = []
+        self.biais = []
+        self.a = a
 
-    def forward(self, X):
-        self.Z1 = np.dot(self.W1, X.T) + self.b1
-        self.A1 = self.sigmoid(self.Z1)
-        self.Z2 = np.dot(self.W2, self.A1) + self.b2
-        self.A2 = self.sigmoid(self.Z2)
-        return self.A2.T
+        #Initialisation en trois fois :
+        #couche d'entrée vers la première couche cachée
+        #couches cachées
+        #dernière couche cachée vers la sortie
+        self.w.append(np.random.randn(b, input_size))
+        self.biais.append(np.zeros((b, 1)))
 
-    def train(self, X, Y, rep=10000):
-        for rep in range(rep):
-            self.forward(X)  # Forward pass
-            self.backward(X, Y)  # Backpropagation
+        for i in range(a - 1):
+            self.w.append(np.random.randn(b, b))
+            self.biais.append(np.zeros((b, 1)))
 
-            # Calcul de la perte (MSE)
-            loss = np.mean((Y - self.A2.T) ** 2)
+        self.w.append(np.random.randn(output_size, b))
+        self.biais.append(np.zeros((output_size, 1)))
+
+
+    def backward(self, X, y):
+        m = X.shape[0]
+        erreurs = [None] * (self.a + 1)  # Liste pour stocker les erreurs
+
+        #Erreur en sortie
+        dA = (self.activations[-1] - y.T) * sigmoid_deriv(self.activations[-1])
+        erreurs[-1] = dA #donne l'erreur pour la derniere couche
+
+        #retropropagation des erreurs
+        for l in range(self.a, 0, -1):
+            erreurs[l - 1] = np.dot(self.w[l].T, erreurs[l]) * sigmoid_deriv(self.activations[l])
+
+        #mise à jour des poids et biais
+        for l in range(len(self.w)):
+            dW = np.dot(erreurs[l], self.activations[l].T) / m
+            db = np.sum(erreurs[l], axis=1, keepdims=True) / m
+            self.w[l] -= self.learning_rate * dW
+            self.biais[l] -= self.learning_rate * db
+
 
 
 
