@@ -38,9 +38,9 @@ class MLP:
 
         self.taille_couches = taille_couches  # liste de dim par couche
         self.tx_app = tx_app
-        self.L = len(taille_couches) - 1  # Nombre de couches (sans la couche d'entrée)
-        self.poids = []
-        self.biais = []
+        self.L = len(taille_couches) - 1  # Nombre d'espces entre couches
+        self.poids = [] #liste de matrices
+        self.biais = [] #liste de vecters
 
         for l in range(self.L):
             input_sz = taille_couches[l]
@@ -55,68 +55,80 @@ class MLP:
         return a * (1 - a)
 
     def softmax(self, v):
-        # Ensure v is a 2D array
         if v.ndim == 1:
             v = v.reshape(1, -1)
         return np.exp(v) / np.sum(np.exp(v), axis=1, keepdims=True)
 
-    def forward_propagation(self, M):
-        activations = [M] #stocke les activations des couches
+    def forward_propagation(self, I):
+        activations = [] #stocke les activations des couches
         zs = []  #stocke les valeurs avant activation
 
-        a = M
-        for l in range(self.L-1): #j'ajoute -1 parce que la derniere se fait avec softmax dans prediction
-            v = np.dot(a, self.poids[l]) + self.biais[l]
-            zs.append(v)
-            a = self.activation_function(v)
-            activations.append(a)
+        for l in range(self.L):
+            v = np.dot(I, self.poids[l]) + self.biais[l]
+            zs.append(v) # besoin de stocker pour backward
+            I = self.activation_function(v)
+            activations.append(I)
 
-        v_final = np.dot(a, self.poids[-1]) + self.biais[-1]
-        a_final = self.softmax(v_final)  #on applique softmax a la derniere couche
-        activations.append(a_final)
-        zs.append(v_final)  #stockage de la dernière somme pondérée
-
-        return a_final, activations, zs
+        return I, activations, zs
 
         #a represente la sortie finale du reseau(avant softmax), vecteur de taille [1,10]
         #activations liste avec toutes les activations des couches
         #zs liste avec toutes les valeurs avant activations
-        return a,activations,zs
 
     def prediction (self,I):
         return self.softmax(self.forward_propagation(I)[0])
 
     def back_propagation (self,X,Y):
-        m=X.shape[0]
+        m=X.shape[0] #nb ligne egale à 28
         activations, zs = self.forward_propagation(X)[1], self.forward_propagation(X)[2]
 
         #Matrice des gradients, matrice mm forme mais avec zeros
         d_poids = [np.zeros_like(w) for w in self.poids]
         d_biais = [np.zeros_like(b) for b in self.biais]
 
-        #On transforme une valeur catégorielle en vecteur binaire
-        Y_one_hot = np.zeros((m, self.taille_couches[-1]))
-        Y_one_hot[np.arange(m), Y] = 1
 
-        #on calcul du gradient de la perte pour la derniere couche
-        #c'est la derivee de l'entropie croisée avec softmax
-        delta = activations[-1] - Y_one_hot
+        Y_one_hot = np.zeros((1, self.taille_couches[-1]))
+        Y_one_hot[0, Y] = 1
+
+
+        erreur = self.prediction(X) - Y_one_hot
 
         #Backpropagation
         #propagation du gradient aux poids et biais
-        for l in range(self.L-1,-1,-1):
-            d_poids[l] = np.dot(activations[l].T, delta)/m
-            d_biais[l] = np.mean(delta, axis=0)
+        for l in range(self.L,-1,-1):
+            d_poids[l] = np.dot(activations[l].T, erreur)
+            d_biais[l] = np.mean(erreur, axis=0)
             #tant qu'on atteint pas la derniere couche
             if l > 0:
-                delta = np.dot(delta, self.poids[l].T) * self.activation_derivative(activations[l])
+                erreur = np.dot(erreur, self.poids[l].T) * self.activation_derivative(activations[l])
 
         # Mise à jour des poids et biais avec descente de gradient
         for l in range(self.L):
             self.poids[l] -= self.tx_app*d_poids[l]
             self.biais[l] -= self.tx_app*d_biais[l]
 
+for X in (Xtrain):
+    prediction = self.activation(X)
+    Backpropagtion
 
+#à la fin de la boucle tu auras la dernière liste de poids (celle optimale)
+
+
+    def entrainer_perceptron(self):
+            for photo in self.base:
+                        n = photo[0]
+                        s = self.somme(n)
+                        prediction = self.activation(s)
+                        if photo[1] == self.chiffre :
+                            reponse = 1
+                        else :
+                            reponse = 0
+                        erreur = reponse - prediction
+
+                        n = n.flatten()
+                        self.w[1:] += self.teta * erreur * n  # mise à jour des poids
+                        self.w[0] += self.teta * erreur
+            return self.w
 
 
 taille= [784,150,250,10]  # liste de dim par couche
@@ -135,9 +147,7 @@ print(prediction)
 #et aussi pour genre accelerer l'entrainement comme c'est deja assez long
 #on utilise des sous-ensemble du dataset pour entrainer le reseau
 #sinon ca prend trop de memoire et c'est trop lent
-n_epochs = 10  # Nombre de fois où on passe sur tout le dataset
 #une epoque passe sur toutes les images, mais en petits groupes
-batch_size = 68  # Nombre d'images utilisées à chaque mise à jour des poids
 
 for epoch in range(n_epochs):
     print(f"Epoch {epoch+1}/{n_epochs}")
