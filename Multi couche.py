@@ -34,20 +34,19 @@ import numpy as np
 
 
 class MLP:
-    def __init__(self, couches_sizes, learning_rate):
+    def __init__(self, taille_couches, tx_app):
 
-        self.couches_sizes = couches_sizes  # liste de dim par couche
-        self.learning_rate = learning_rate
-        self.L = len(couches_sizes) - 1  # Nombre de couches (sans la couche d'entrée)
-
-        self.weights = []
-        self.biases = []
+        self.taille_couches = taille_couches  # liste de dim par couche
+        self.tx_app = tx_app
+        self.L = len(taille_couches) - 1  # Nombre de couches (sans la couche d'entrée)
+        self.poids = []
+        self.biais = []
 
         for l in range(self.L):
-            input_size = couches_sizes[l]
-            output_size = couches_sizes[l + 1]
-            self.weights.append(np.random.randn(input_size, output_size) * 0.01)
-            self.biases.append(np.random.randn(output_size) * 0.01)
+            input_sz = taille_couches[l]
+            output_sz = taille_couches[l+1]
+            self.poids.append(np.random.randn(input_sz, output_sz) * 0.01)
+            self.biais.append(np.random.randn(output_sz) * 0.01)
 
     def activation_function(self, v):
         return 1 / (1 + np.exp(-v))
@@ -67,12 +66,12 @@ class MLP:
 
         a = M
         for l in range(self.L-1): #j'ajoute -1 parce que la derniere se fait avec softmax dans prediction
-            v = np.dot(a, self.weights[l]) + self.biases[l]
+            v = np.dot(a, self.poids[l]) + self.biais[l]
             zs.append(v)
             a = self.activation_function(v)
             activations.append(a)
 
-        v_final = np.dot(a, self.weights[-1]) + self.biases[-1]
+        v_final = np.dot(a, self.poids[-1]) + self.biais[-1]
         a_final = self.softmax(v_final)  #on applique softmax a la derniere couche
         activations.append(a_final)
         zs.append(v_final)  #stockage de la dernière somme pondérée
@@ -92,11 +91,11 @@ class MLP:
         activations, zs = self.forward_propagation(X)[1], self.forward_propagation(X)[2]
 
         #Matrice des gradients, matrice mm forme mais avec zeros
-        d_weights = [np.zeros_like(w) for w in self.weights]
-        d_biases = [np.zeros_like(b) for b in self.biases]
+        d_poids = [np.zeros_like(w) for w in self.poids]
+        d_biais = [np.zeros_like(b) for b in self.biais]
 
         #On transforme une valeur catégorielle en vecteur binaire
-        Y_one_hot = np.zeros((m, self.couches_sizes[-1]))
+        Y_one_hot = np.zeros((m, self.taille_couches[-1]))
         Y_one_hot[np.arange(m), Y] = 1
 
         #on calcul du gradient de la perte pour la derniere couche
@@ -106,24 +105,24 @@ class MLP:
         #Backpropagation
         #propagation du gradient aux poids et biais
         for l in range(self.L-1,-1,-1):
-            d_weights[l] = np.dot(activations[l].T, delta)/m
-            d_biases[l] = np.mean(delta, axis=0)
+            d_poids[l] = np.dot(activations[l].T, delta)/m
+            d_biais[l] = np.mean(delta, axis=0)
             #tant qu'on atteint pas la derniere couche
             if l > 0:
-                delta = np.dot(delta, self.weights[l].T) * self.activation_derivative(activations[l])
+                delta = np.dot(delta, self.poids[l].T) * self.activation_derivative(activations[l])
 
         # Mise à jour des poids et biais avec descente de gradient
         for l in range(self.L):
-            self.weights[l] -= self.learning_rate*d_weights[l]
-            self.biases[l] -= self.learning_rate*d_biases[l]
+            self.poids[l] -= self.tx_app*d_poids[l]
+            self.biais[l] -= self.tx_app*d_biais[l]
 
 
 
 
-couches_sizes = [784,150,250,10]  # liste de dim par couche
-learning_rate = 0.1
+taille= [784,150,250,10]  # liste de dim par couche
+taux_app=0.1
 print("aaaaa")
-P = MLP (couches_sizes, learning_rate)
+P = MLP (taille, taux_app)
 
 test = [(X_test[i], Y_test[i]) for i in range(10000)]
 I = test[0][0]
@@ -157,6 +156,7 @@ for epoch in range(n_epochs):
         P.back_propagation(X_batch, Y_batch)  # Mise à jour des poids avec backpropagation
 
     print("Fin de l'époque", epoch + 1)
+
 
 I = X_test[7]  # Une image test
 prediction = P.prediction(I)
