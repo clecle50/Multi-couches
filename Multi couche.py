@@ -89,7 +89,7 @@ class MLP:
         Y_one_hot = np.zeros((1, self.taille_couches[-1]))
         Y_one_hot[0,Y] = 1
 
-        err_poids[-1] = activations[-1] - Y_one_hot  # (1, 10) - (1, 10) = (1, 10)
+        err_poids[-1] = activations[-1] - Y_one_hot
         err_biais[-1] = err_poids[-1]
 
         for l in range(self.L-3,-1,-1): # de la dernière couche cachée à la première
@@ -97,7 +97,6 @@ class MLP:
             err_poids[l] = np.dot(err_poids[l + 1], self.poids[l+1].T) * self.activation_derivative(activations[l+1])
             err_biais[l] = np.mean(err_poids[l], axis=0).reshape(1, -1)
 
-        # maj des poids et des biais
         for l in range(len(self.poids)):  # maj que L-1 couches
             self.poids[l] -= self.tx_app * np.dot(activations[l].T, err_poids[l])
             self.biais[l] -= self.tx_app * err_biais[l]
@@ -110,11 +109,12 @@ P = MLP (taille, taux_app)
 
 t = time.time()
 # Entraînement
-for i in range(len(X_train)):
-        X_image= X_train[i].reshape(1, -1)  #forme (1, 784)
-        Y_image = np.array([Y_train[i]])  #forme (1,)
-        P.back_propagation(X_image, Y_image)  #mise à jour poids avec backpropagation
-print(time.time() - t)
+for rep in range (10) :
+    for i in range(len(X_train)):
+            X_image= X_train[i].reshape(1, -1)  #forme (1, 784)
+            Y_image = np.array([Y_train[i]])  #forme (1,)
+            P.back_propagation(X_image, Y_image)  #mise à jour poids avec backpropagation
+    print(time.time() - t)
 
 # Test
 r = 0
