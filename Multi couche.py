@@ -32,14 +32,15 @@ print(time.time() - t)
 import numpy as np
 
 class MLP:
-    def __init__(self, taille_couches, tx_app):
+    def __init__(self, taille_couches, tx_app, activation_function, activation_derivative):
 
         self.taille_couches = taille_couches  # liste de dim par couche
         self.tx_app = tx_app
         self.L = len(taille_couches)  # Nombre de ciouches
         self.poids = [] #liste de matrices
         self.biais = [] #liste de vecters
-        
+        self.activation_function = activation_function
+        self.activation_derivative = activation_derivative
 
         for l in range(self.L-1):
             input_sz = taille_couches[l]
@@ -47,11 +48,7 @@ class MLP:
             self.poids.append(np.random.randn(input_sz, output_sz) * 0.01)
             self.biais.append((np.random.randn(output_sz) * 0.01).reshape(1, -1))
 
-    def activation_function(self, v):
-        return np.maximum(0, v)
 
-    def activation_derivative(self, a):
-        return (a > 0).astype(float)
 
 
     def softmax(self, v):
@@ -104,11 +101,56 @@ class MLP:
 
 
 
-taille= [784,35,10]  # liste de dim par couche si trop ça perde en performance car surapprentissage
-#taux_app= 0.1
-#P = MLP (taille, taux_app)
+taille= [784,10]  # liste de dim par couche si trop ça perde en performance car surapprentissage
+activations_fct = []
+taux_app= 0.05
+
+def relu_function(v):
+    return np.maximum(0, v)
+def relu_derivative(a):
+    return (a > 0).astype(float)
+activations_fct.append((relu_function,relu_derivative))
+
+def sigmoide_function(v):
+    return 1 / (1 + np.exp(-v))
+def sigmoide_derivative(a):
+    return a * (1 - a)
+activations_fct.append((sigmoide_function,sigmoide_derivative))
+
+def selu_activation(v, alpha=1.6733, lambd=1.0507):
+    return lambd * np.where(v > 0, v, alpha * (np.exp(v) - 1))
+def selu_derivative(v, alpha=1.6733, lambd=1.0507):
+    return lambd * np.where(v > 0, 1, alpha * np.exp(v))
+activations_fct.append((selu_activation,selu_derivative))
+
+for nb_couches in range (1,6) :
+    taille = []
+
+    for fct in activations_fct :
+
+        P = MLP (taille, taux_app, fct[0], fct[1])
+        for i in range(len(X_train)):
+                        X_image= X_train[i].reshape(1, -1)  #forme (1, 784)
+                        Y_image = np.array([Y_train[i]])  #forme (1,)
+                        P.back_propagation(X_image, Y_image)  #mise à jour poids avec backpropagation
+
+        r = 0
+        br = 0
+        for i in range(len(X_test)):
+                r += 1
+                X_image = X_test[i].reshape(1, -1)  # forme (1, 784)
+                Y_image = Y_test[i]
+                prediction = np.argmax(P.prediction(X_image))
+                #print(Y_image,prediction)  # forme (1,)
+
+                if prediction == Y_image:
+                    br += 1
+        print(f"Taux de bonnes réponses pour la {fct[0]} : {taux_app  },{br / r * 100:.2f}%")
 
 
+
+
+"""
 for taux_app in np.arange(0.01,1,0.01) :
     P = MLP(taille, taux_app)
     t = time.time()
@@ -135,3 +177,4 @@ for taux_app in np.arange(0.01,1,0.01) :
             br += 1
 
     print(f"Taux de bonnes réponses : {taux_app  },{br / r * 100:.2f}%")
+"""
