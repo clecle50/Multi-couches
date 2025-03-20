@@ -39,6 +39,7 @@ class MLP:
         self.L = len(taille_couches)  # Nombre de ciouches
         self.poids = [] #liste de matrices
         self.biais = [] #liste de vecters
+        
 
         for l in range(self.L-1):
             input_sz = taille_couches[l]
@@ -46,12 +47,12 @@ class MLP:
             self.poids.append(np.random.randn(input_sz, output_sz) * 0.01)
             self.biais.append((np.random.randn(output_sz) * 0.01).reshape(1, -1))
 
-
     def activation_function(self, v):
-        return 1 / (1 + np.exp(-v))
+        return np.maximum(0, v)
 
     def activation_derivative(self, a):
-        return a * (1 - a)
+        return (a > 0).astype(float)
+
 
     def softmax(self, v):
         if v.ndim == 1:
@@ -104,29 +105,33 @@ class MLP:
 
 
 taille= [784,35,10]  # liste de dim par couche si trop ça perde en performance car surapprentissage
-taux_app= 0.1
-P = MLP (taille, taux_app)
+#taux_app= 0.1
+#P = MLP (taille, taux_app)
 
-t = time.time()
-# Entraînement
-for rep in range (10) :
-    for i in range(len(X_train)):
-            X_image= X_train[i].reshape(1, -1)  #forme (1, 784)
-            Y_image = np.array([Y_train[i]])  #forme (1,)
-            P.back_propagation(X_image, Y_image)  #mise à jour poids avec backpropagation
+
+for taux_app in np.arange(0.01,1,0.01) :
+    P = MLP(taille, taux_app)
+    t = time.time()
+    # Entraînement
+    for rep in range (1) :
+        for i in range(len(X_train)):
+                X_image= X_train[i].reshape(1, -1)  #forme (1, 784)
+                Y_image = np.array([Y_train[i]])  #forme (1,)
+                P.back_propagation(X_image, Y_image)  #mise à jour poids avec backpropagation
     print(time.time() - t)
 
-# Test
-r = 0
-br = 0
-for i in range(len(X_test)):
-    r += 1
-    X_image = X_test[i].reshape(1, -1)  # forme (1, 784)
-    Y_image = Y_test[i]
-    prediction = np.argmax(P.prediction(X_image))
-    #print(Y_image,prediction)  # forme (1,)
 
-    if prediction == Y_image:
-        br += 1
+    # Test
+    r = 0
+    br = 0
+    for i in range(len(X_test)):
+        r += 1
+        X_image = X_test[i].reshape(1, -1)  # forme (1, 784)
+        Y_image = Y_test[i]
+        prediction = np.argmax(P.prediction(X_image))
+        #print(Y_image,prediction)  # forme (1,)
 
-print(f"Taux de bonnes réponses : {br / r * 100:.2f}%")
+        if prediction == Y_image:
+            br += 1
+
+    print(f"Taux de bonnes réponses : {taux_app  },{br / r * 100:.2f}%")
