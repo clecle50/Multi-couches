@@ -3,7 +3,8 @@ import pandas as pd
 import time
 import random
 import matplotlib.pyplot as plt
-
+import matplotlib.pyplot as plt
+import random
 
 t = time.time()
 #train_data = pd.read_csv('C:/Users/Utilisateur/Documents/L3 TSE/S5/Projet informatique magistère/mnist_train.csv')
@@ -123,32 +124,52 @@ def selu_derivative(v, alpha=1.6733, lambd=1.0507):
     return lambd * np.where(v > 0, 1, alpha * np.exp(v))
 activations_fct.append((selu_activation,selu_derivative))
 
-for nb_couches in range (1,6) :
-    taille = []
+resultats = {}
 
-    for fct in activations_fct :
 
-        P = MLP (taille, taux_app, fct[0], fct[1])
+for nb_couches in range(1, 5):
+    taille.insert(-1, random.randint(10, 120))
+    print(f"Itération {nb_couches}: {taille}")
+
+    for fct in activations_fct:
+        P = MLP(taille, taux_app, fct[0], fct[1])
+
         for i in range(len(X_train)):
-                        X_image= X_train[i].reshape(1, -1)  #forme (1, 784)
-                        Y_image = np.array([Y_train[i]])  #forme (1,)
-                        P.back_propagation(X_image, Y_image)  #mise à jour poids avec backpropagation
+            X_image = X_train[i].reshape(1, -1)
+            Y_image = np.array([Y_train[i]])
+            P.back_propagation(X_image, Y_image)
 
-        r = 0
-        br = 0
+        r, br = 0, 0
         for i in range(len(X_test)):
-                r += 1
-                X_image = X_test[i].reshape(1, -1)  # forme (1, 784)
-                Y_image = Y_test[i]
-                prediction = np.argmax(P.prediction(X_image))
-                #print(Y_image,prediction)  # forme (1,)
+            r += 1
+            X_image = X_test[i].reshape(1, -1)
+            Y_image = Y_test[i]
+            prediction = np.argmax(P.prediction(X_image))
 
-                if prediction == Y_image:
-                    br += 1
-        print(f"Taux de bonnes réponses pour la {fct[0]} : {taux_app  },{br / r * 100:.2f}%")
+            if prediction == Y_image:
+                br += 1
+
+        performance = (br / r) * 100  # Taux de bonnes réponses en pourcentage
+        print(f"Taux de bonnes réponses pour {fct[0]} : {performance:.2f}%")
+
+        # Stocker les performances
+        if fct[0] not in resultats:
+            resultats[fct[0]] = []
+        resultats[fct[0]].append((nb_couches, performance))
 
 
+plt.figure(figsize=(8, 6))
 
+for fct, data in resultats.items():
+    couches, performances = zip(*data)
+    plt.plot(couches, performances, marker='o', label=fct)
+
+plt.xlabel("Nombre de couches cachées")
+plt.ylabel("Taux de bonnes réponses (%)")
+plt.title("Performance des fonctions d'activation en fonction du nombre de couches")
+plt.legend()
+plt.grid(True)
+plt.show()
 
 """
 for taux_app in np.arange(0.01,1,0.01) :
