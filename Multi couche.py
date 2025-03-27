@@ -9,21 +9,24 @@ import random
 t = time.time()
 #train_data = pd.read_csv('C:/Users/Utilisateur/Documents/L3 TSE/S5/Projet informatique magistère/mnist_train.csv')
 #test_data = pd.read_csv("C:/Users/Utilisateur/Documents/L3 TSE/S5/Projet informatique magistère/mnist_test.csv")
-train_data = pd.read_csv('C:/Users/ghani/Documents/Desktop/TSE/Licence 3/S1/Projet Magistere/mnist_train.csv')
-test_data = pd.read_csv('C:/Users/ghani/Documents/Desktop/TSE/Licence 3/S1/Projet Magistere/mnist_test.csv')
+#train_data = pd.read_csv('C:/Users/ghani/Documents/Desktop/TSE/Licence 3/S1/Projet Magistere/mnist_train.csv')
+#test_data = pd.read_csv('C:/Users/ghani/Documents/Desktop/TSE/Licence 3/S1/Projet Magistere/mnist_test.csv')
 
-#X_train=train_data.drop(labels=["label"],axis=1)
-#Y_train=train_data["label"]
+train_data = pd.read_csv('C:/Users/ghani/Documents/Desktop/TSE/Licence 3/S1/Projet Magistere/train.csv')
+test_data = pd.read_csv('C:/Users/ghani/Documents/Desktop/TSE/Licence 3/S1/Projet Magistere/test.csv')
 
-#X_test=test_data.drop(labels=["label"],axis=1)
-#Y_test=test_data["label"]
 
-X_train = train_data.drop(labels=["label"], axis=1).to_numpy()  # convertir en numpy array
-Y_train = train_data["label"].to_numpy()
-X_test = test_data.drop(labels=["label"], axis=1).to_numpy()
-Y_test = test_data["label"].to_numpy()
+data_train = train_data.to_numpy()
+data_test = test_data.to_numpy()
 
-X_train = X_train / 255.0 #on normalise
+
+X_train = data_train[:,1:]
+Y_train = data_train[:,0]
+
+X_test = data_test[:,1:]
+Y_test = data_test[:,0]
+
+X_train = X_train / 255.0
 X_test = X_test / 255.0
 
 print(time.time() - t)
@@ -102,7 +105,7 @@ class MLP:
 
 
 
-taille= [784,10]  # liste de dim par couche si trop ça perde en performance car surapprentissage
+taille= [784,26]  # liste de dim par couche si trop ça perde en performance car surapprentissage
 activations_fct = []
 taux_app= 0.05
 
@@ -127,7 +130,7 @@ activations_fct.append((selu_activation,selu_derivative))
 resultats = {}
 
 
-for nb_couches in range(1, 5):
+for nb_couches in range(1, 2):
     taille.insert(-1, random.randint(10, 120))
     print(f"Itération {nb_couches}: {taille}")
 
