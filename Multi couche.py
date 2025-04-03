@@ -130,7 +130,7 @@ activations_fct.append((selu_activation,selu_derivative))
 resultats = {}
 
 
-for nb_couches in range(1, 2):
+for nb_couches in range(1, 1):
     taille.insert(-1, random.randint(10, 120))
     print(f"Itération {nb_couches}: {taille}")
 
